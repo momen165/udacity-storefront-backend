@@ -4,6 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
+    "build": "tsc",
     "start": "node dist/server.js",
     "watch": "tsc-watch --onSuccess \"node dist/server.js\"",
     "test": "yarn tsc && jasmine --config=spec/support/jasmine.json",

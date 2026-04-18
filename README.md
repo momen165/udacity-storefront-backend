@@ -9,6 +9,19 @@ A TypeScript, Express, and PostgreSQL API for a storefront application. The API 
 - PostgreSQL 16+
 - Docker and Docker Compose optional, but supported
 
+## Environment Variables
+
+Create a `.env` file in the project root with these values:
+
+```bash
+POSTGRES_HOST=127.0.0.1
+POSTGRES_DB=storefront_dev
+POSTGRES_USER=storefront_user
+POSTGRES_PASSWORD=storefront_password
+TOKEN_SECRET=your_secret_here
+ENV=dev
+```
+
 ## Setup
 
 1. Install dependencies.
@@ -17,34 +30,25 @@ A TypeScript, Express, and PostgreSQL API for a storefront application. The API 
    yarn
    ```
 
-2. Create a `.env` file in the project root with your database and JWT settings.
+2. Start PostgreSQL.
 
-   ```bash
-   POSTGRES_HOST=127.0.0.1
-   POSTGRES_DB=storefront_dev
-   POSTGRES_USER=storefront_user
-   POSTGRES_PASSWORD=storefront_password
-   TOKEN_SECRET=your_secret_here
-   ENV=dev
-   ```
+   The database listens on port `5432`.
 
-3. Start PostgreSQL.
-
-   You can use Docker Compose:
+   You can start the bundled database with Docker Compose:
 
    ```bash
    docker compose up -d postgres
    ```
 
-   Or point the app at an existing PostgreSQL instance using the same environment variables.
+   Or connect the app to an existing PostgreSQL instance by updating the values in `.env`.
 
-4. Run the database migrations.
+3. Run the database migrations.
 
    ```bash
    npx db-migrate up
    ```
 
-## Running the app
+## Running the App
 
 Start the API in development mode with:
 
@@ -52,7 +56,13 @@ Start the API in development mode with:
 yarn watch
 ```
 
-This compiles the TypeScript code and starts the server on port `3000`.
+The API runs on port `3000`.
+
+To compile the TypeScript sources without starting the server, run:
+
+```bash
+yarn build
+```
 
 To run the compiled server directly after building:
 
@@ -100,7 +110,7 @@ The app reads its database connection from environment variables and `database.j
 - `GET /products` - list all products
 - `GET /products/:id` - fetch a single product
 - `POST /products` - create a product, requires a JWT
-- `GET /products/popular` - returns the most commonly ordered products
+- `GET /products/popular` - returns the five most commonly ordered products
 
 ### Users
 
@@ -120,4 +130,4 @@ The app reads its database connection from environment variables and `database.j
 
 - CORS is enabled for all routes.
 - Authentication is handled with JWTs in the `Authorization: Bearer <token>` header.
-- Passwords are stored as hashed values.
+- Passwords are stored as hashed values with bcrypt.
