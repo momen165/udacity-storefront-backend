@@ -1,15 +1,24 @@
-import express, { Request, Response } from 'express'
-import bodyParser from 'body-parser'
+import express from "express";
+import cors from "cors";
 
-const app: express.Application = express()
-const address: string = "0.0.0.0:3000"
+import ordersRouter from "./handlers/orders";
+import productsRouter from "./handlers/products";
+import usersRouter from "./handlers/users";
 
-app.use(bodyParser.json())
+const app = express();
+const address = "0.0.0.0:3000";
 
-app.get('/', function (req: Request, res: Response) {
-    res.send('Hello World!')
-})
+app.use(cors());
+app.use(express.json());
 
-app.listen(3000, function () {
-    console.log(`starting app on: ${address}`)
-})
+app.use("/users", usersRouter);
+app.use("/products", productsRouter);
+app.use("/orders", ordersRouter);
+
+if (process.env.NODE_ENV !== "test") {
+  app.listen(3000, function () {
+    console.log(`starting app on: ${address}`);
+  });
+}
+
+export default app;

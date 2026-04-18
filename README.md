@@ -1,54 +1,123 @@
 # Storefront Backend Project
 
-## Getting Started
+A TypeScript, Express, and PostgreSQL API for a storefront application. The API supports browsing products, managing users, creating orders, and adding products to orders.
 
-This repo contains a basic Node and Express app to get you started in constructing an API. To get started, clone this repo and run `yarn` in your terminal at the project root.
+## Requirements
 
-## Required Technologies
-Your application must make use of the following libraries:
-- Postgres for the database
-- Node/Express for the application logic
-- dotenv from npm for managing environment variables
-- db-migrate from npm for migrations
-- jsonwebtoken from npm for working with JWTs
-- jasmine from npm for testing
+- Node.js 18+ recommended
+- Yarn
+- PostgreSQL 16+
+- Docker and Docker Compose optional, but supported
 
-## Steps to Completion
+## Setup
 
-### 1. Plan to Meet Requirements
+1. Install dependencies.
 
-In this repo there is a `REQUIREMENTS.md` document which outlines what this API needs to supply for the frontend, as well as the agreed upon data shapes to be passed between front and backend. This is much like a document you might come across in real life when building or extending an API. 
+   ```bash
+   yarn
+   ```
 
-Your first task is to read the requirements and update the document with the following:
-- Determine the RESTful route for each endpoint listed. Add the RESTful route and HTTP verb to the document so that the frontend developer can begin to build their fetch requests.    
-**Example**: A SHOW route: 'blogs/:id' [GET] 
+2. Create a `.env` file in the project root with your database and JWT settings.
 
-- Design the Postgres database tables based off the data shape requirements. Add to the requirements document the database tables and columns being sure to mark foreign keys.   
-**Example**: You can format this however you like but these types of information should be provided
-Table: Books (id:varchar, title:varchar, author:varchar, published_year:varchar, publisher_id:string[foreign key to publishers table], pages:number)
+   ```bash
+   POSTGRES_HOST=127.0.0.1
+   POSTGRES_DB=storefront_dev
+   POSTGRES_USER=storefront_user
+   POSTGRES_PASSWORD=storefront_password
+   TOKEN_SECRET=your_secret_here
+   ENV=dev
+   ```
 
-**NOTE** It is important to remember that there might not be a one to one ratio between data shapes and database tables. Data shapes only outline the structure of objects being passed between frontend and API, the database may need multiple tables to store a single shape. 
+3. Start PostgreSQL.
 
-### 2.  DB Creation and Migrations
+   You can use Docker Compose:
 
-Now that you have the structure of the databse outlined, it is time to create the database and migrations. Add the npm packages dotenv and db-migrate that we used in the course and setup your Postgres database. If you get stuck, you can always revisit the database lesson for a reminder. 
+   ```bash
+   docker compose up -d postgres
+   ```
 
-You must also ensure that any sensitive information is hashed with bcrypt. If any passwords are found in plain text in your application it will not pass.
+   Or point the app at an existing PostgreSQL instance using the same environment variables.
 
-### 3. Models
+4. Run the database migrations.
 
-Create the models for each database table. The methods in each model should map to the endpoints in `REQUIREMENTS.md`. Remember that these models should all have test suites and mocks.
+   ```bash
+   npx db-migrate up
+   ```
 
-### 4. Express Handlers
+## Running the app
 
-Set up the Express handlers to route incoming requests to the correct model method. Make sure that the endpoints you create match up with the enpoints listed in `REQUIREMENTS.md`. Endpoints must have tests and be CORS enabled. 
+Start the API in development mode with:
 
-### 5. JWTs
+```bash
+yarn watch
+```
 
-Add JWT functionality as shown in the course. Make sure that JWTs are required for the routes listed in `REQUIUREMENTS.md`.
+This compiles the TypeScript code and starts the server on port `3000`.
 
-### 6. QA and `README.md`
+To run the compiled server directly after building:
 
-Before submitting, make sure that your project is complete with a `README.md`. Your `README.md` must include instructions for setting up and running your project including how you setup, run, and connect to your database. 
+```bash
+yarn start
+```
 
-Before submitting your project, spin it up and test each endpoint. If each one responds with data that matches the data shapes from the `REQUIREMENTS.md`, it is ready for submission!
+## Testing
+
+Run the TypeScript compile step and the Jasmine test suite with:
+
+```bash
+yarn test
+```
+
+If you only want the type-check:
+
+```bash
+yarn tsc
+```
+
+### Postman Collection
+
+This repository includes a Postman collection and environment in the `postman/` folder:
+
+- `postman/Storefront API.postman_collection.json`
+- `postman/Storefront API.postman_environment.json`
+
+Import both files into Postman to exercise the API endpoints manually.
+
+## Database Configuration
+
+The app reads its database connection from environment variables and `database.json`.
+
+- `POSTGRES_HOST`
+- `POSTGRES_DB`
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+- `TOKEN_SECRET`
+
+## API Endpoints
+
+### Products
+
+- `GET /products` - list all products
+- `GET /products/:id` - fetch a single product
+- `POST /products` - create a product, requires a JWT
+- `GET /products/popular` - returns the most commonly ordered products
+
+### Users
+
+- `GET /users` - list all users, requires a JWT
+- `GET /users/:id` - fetch a single user, requires a JWT
+- `POST /users` - create a user
+- `POST /users/authenticate` - authenticate a user and receive a JWT
+
+### Orders
+
+- `POST /orders` - create an active order for a user, requires a JWT
+- `PATCH /orders/:id` - mark an order complete, requires a JWT
+- `GET /orders/:user_id` - fetch the current active order for a user, requires a JWT
+- `POST /orders/:id/products` - add a product to an order, requires a JWT
+
+## Notes
+
+- CORS is enabled for all routes.
+- Authentication is handled with JWTs in the `Authorization: Bearer <token>` header.
+- Passwords are stored as hashed values.
