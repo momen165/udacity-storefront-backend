@@ -8,6 +8,9 @@
     "start": "node dist/server.js",
     "watch": "tsc-watch --onSuccess \"node dist/server.js\"",
     "test": "yarn tsc && jasmine --config=spec/support/jasmine.json",
+    "db:migrate": "node ./node_modules/db-migrate/bin/db-migrate up --env dev",
+    "db:migrate:test": "node ./node_modules/db-migrate/bin/db-migrate up --env test",
+    "db:reset:test": "node ./node_modules/db-migrate/bin/db-migrate down --env test && node ./node_modules/db-migrate/bin/db-migrate up --env test",
     "tsc": "tsc"
   },
   "author": "Udacity",

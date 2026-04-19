@@ -2,15 +2,35 @@ import { Router, Request, Response } from "express";
 
 import verifyAuth from "../middleware/verifyAuth";
 import { OrderStore } from "../models/order";
+import { OrderProductStore } from "../models/orderProduct";
 
 const orderStore = new OrderStore();
+const orderProductStore = new OrderProductStore();
+
+interface CreateOrderBody {
+  userId?: number | string;
+  user_id?: number | string;
+}
+
+interface UpdateOrderBody {
+  status?: string;
+}
+
+interface AddOrderProductBody {
+  quantity: number | string;
+  productId?: number | string;
+  product_id?: number | string;
+}
 
 const ordersRouter = Router();
 
 ordersRouter.post(
   "/",
   verifyAuth,
-  async (request: Request, response: Response) => {
+  async (
+    request: Request<Record<string, never>, unknown, CreateOrderBody>,
+    response: Response,
+  ) => {
     const userId = Number(request.body.userId ?? request.body.user_id);
 
     if (Number.isNaN(userId)) {
@@ -31,7 +51,10 @@ ordersRouter.post(
 ordersRouter.patch(
   "/:id",
   verifyAuth,
-  async (request: Request, response: Response) => {
+  async (
+    request: Request<Record<string, string>, unknown, UpdateOrderBody>,
+    response: Response,
+  ) => {
     const orderId = Number(request.params.id);
     const status = String(request.body.status ?? "complete");
 
@@ -56,7 +79,7 @@ ordersRouter.patch(
 ordersRouter.get(
   "/:user_id",
   verifyAuth,
-  async (request: Request, response: Response) => {
+  async (request: Request<Record<string, string>>, response: Response) => {
     try {
       const currentOrder = await orderStore.getCurrentByUserId(
         request.params.user_id,
@@ -76,7 +99,10 @@ ordersRouter.get(
 ordersRouter.post(
   "/:id/products",
   verifyAuth,
-  async (request: Request, response: Response) => {
+  async (
+    request: Request<Record<string, string>, unknown, AddOrderProductBody>,
+    response: Response,
+  ) => {
     const quantity = Number(request.body.quantity);
     const rawProductId = request.body.productId ?? request.body.product_id;
     const orderId = Number(request.params.id);
@@ -93,7 +119,7 @@ ordersRouter.post(
     }
 
     try {
-      const addedProduct = await orderStore.addProduct(
+      const addedProduct = await orderProductStore.create(
         quantity,
         orderId,
         productId,

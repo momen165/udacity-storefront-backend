@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 
 import { OrderStore } from "../../models/order";
+import { OrderProductStore } from "../../models/orderProduct";
 import { ProductStore } from "../../models/product";
 import { UserStore } from "../../models/user";
 import pool, { resetTables } from "../helpers";
@@ -8,6 +9,7 @@ import pool, { resetTables } from "../helpers";
 describe("UserStore", () => {
   const store = new UserStore();
   const orderStore = new OrderStore();
+  const orderProductStore = new OrderProductStore();
   const productStore = new ProductStore();
 
   beforeEach(async () => {
@@ -86,14 +88,14 @@ describe("UserStore", () => {
     const firstOrder = await orderStore.create(user.id as number);
     const secondOrder = await orderStore.create(user.id as number);
 
-    await orderStore.addProduct(
+    await orderProductStore.create(
       2,
       firstOrder.id as number,
       firstProduct.id as number,
     );
     await orderStore.updateStatus(firstOrder.id as number, "complete");
 
-    await orderStore.addProduct(
+    await orderProductStore.create(
       1,
       secondOrder.id as number,
       secondProduct.id as number,
@@ -106,5 +108,32 @@ describe("UserStore", () => {
     expect(userWithPurchases?.recentPurchases.length).toBe(2);
     expect(userWithPurchases?.recentPurchases[0].name).toEqual("Tea");
     expect(userWithPurchases?.recentPurchases[1].name).toEqual("Coffee");
+  });
+
+  it("authenticates a user with valid credentials", async () => {
+    await store.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+
+    const authenticatedUser = await store.authenticate("Jane", "secret123");
+
+    expect(authenticatedUser).not.toBeNull();
+    expect(authenticatedUser?.first_name).toEqual("Jane");
+  });
+
+  it("returns null when authentication credentials are invalid", async () => {
+    await store.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+
+    const wrongPasswordResult = await store.authenticate("Jane", "wrong-pass");
+    const unknownUserResult = await store.authenticate("Unknown", "secret123");
+
+    expect(wrongPasswordResult).toBeNull();
+    expect(unknownUserResult).toBeNull();
   });
 });

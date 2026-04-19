@@ -2,6 +2,7 @@ import request from "supertest";
 
 import app from "../../server";
 import { OrderStore } from "../../models/order";
+import { OrderProductStore } from "../../models/orderProduct";
 import { ProductStore } from "../../models/product";
 import { UserStore } from "../../models/user";
 import { signTestToken, resetTables } from "../helpers";
@@ -9,6 +10,7 @@ import { signTestToken, resetTables } from "../helpers";
 describe("Products handlers", () => {
   const store = new ProductStore();
   const orderStore = new OrderStore();
+  const orderProductStore = new OrderProductStore();
   const userStore = new UserStore();
 
   beforeEach(async () => {
@@ -27,6 +29,34 @@ describe("Products handlers", () => {
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(1);
     expect(response.body[0].id).toEqual(product.id);
+  });
+
+  it("GET /products/:id returns one product", async () => {
+    const product = await store.create({
+      name: "Coffee",
+      price: 12,
+      category: "Beverages",
+    });
+
+    const response = await request(app).get(`/products/${product.id}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.id).toEqual(product.id);
+    expect(response.body.name).toEqual("Coffee");
+  });
+
+  it("GET /products/:id returns 400 for an invalid id", async () => {
+    const response = await request(app).get("/products/not-a-number");
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toEqual("Invalid product id");
+  });
+
+  it("GET /products/:id returns 404 when product does not exist", async () => {
+    const response = await request(app).get("/products/999");
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toEqual("Product not found");
   });
 
   it("GET /products/popular returns the 5 most commonly ordered items", async () => {
@@ -51,14 +81,18 @@ describe("Products handlers", () => {
     const firstOrder = await orderStore.create(user.id as number);
     const secondOrder = await orderStore.create(user.id as number);
 
-    await orderStore.addProduct(
+    await orderProductStore.create(
       3,
       firstOrder.id as number,
       coffee.id as number,
     );
     await orderStore.updateStatus(firstOrder.id as number, "complete");
 
-    await orderStore.addProduct(5, secondOrder.id as number, tea.id as number);
+    await orderProductStore.create(
+      5,
+      secondOrder.id as number,
+      tea.id as number,
+    );
     await orderStore.updateStatus(secondOrder.id as number, "complete");
 
     const response = await request(app).get("/products/popular");

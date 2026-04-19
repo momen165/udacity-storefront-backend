@@ -22,6 +22,17 @@ TOKEN_SECRET=your_secret_here
 ENV=dev
 ```
 
+Create a `.env.test` file for the test suite. Use the same credentials format, but point `POSTGRES_DB` to a dedicated test database:
+
+```bash
+POSTGRES_HOST=127.0.0.1
+POSTGRES_DB=storefront_test
+POSTGRES_USER=storefront_user
+POSTGRES_PASSWORD=storefront_password
+TOKEN_SECRET=your_secret_here
+ENV=test
+```
+
 ## Setup
 
 1. Install dependencies.
@@ -76,6 +87,17 @@ Run the TypeScript compile step and the Jasmine test suite with:
 
 ```bash
 yarn test
+```
+
+The test bootstrap automatically runs migrations against the `test` db-migrate environment using `.env.test`.
+If PostgreSQL is not running or `.env.test` is missing/invalid, the test command exits with a clear setup error.
+
+You can also run migration commands directly:
+
+```bash
+yarn db:migrate
+yarn db:migrate:test
+yarn db:reset:test
 ```
 
 If you only want the type-check:

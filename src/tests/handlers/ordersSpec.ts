@@ -57,6 +57,40 @@ describe("Orders handlers", () => {
     expect(response.body.status).toEqual("complete");
   });
 
+  it("PATCH /orders/:id returns 400 for an invalid order id", async () => {
+    const user = await userStore.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+    const token = signTestToken(user);
+
+    const response = await request(app)
+      .patch("/orders/not-a-number")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "complete" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toEqual("Invalid order id");
+  });
+
+  it("PATCH /orders/:id returns 404 when order does not exist", async () => {
+    const user = await userStore.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+    const token = signTestToken(user);
+
+    const response = await request(app)
+      .patch("/orders/999")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ status: "complete" });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toEqual("Order not found");
+  });
+
   it("GET /orders/:user_id returns the current order for a user", async () => {
     const user = await userStore.create({
       first_name: "Jane",
@@ -138,6 +172,25 @@ describe("Orders handlers", () => {
     expect(currentOrder?.id).toEqual(orderResult.rows[0].id);
   });
 
+  it("POST /orders/:id/products returns 400 for invalid payload", async () => {
+    const user = await userStore.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+    const token = signTestToken(user);
+
+    const response = await request(app)
+      .post("/orders/invalid/products")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ quantity: "not-a-number", productId: "bad" });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toEqual(
+      "quantity, orderId, and productId must be valid numbers",
+    );
+  });
+
   it("POST /orders/:id/products returns 404 when order does not exist", async () => {
     const user = await userStore.create({
       first_name: "Jane",
@@ -159,5 +212,24 @@ describe("Orders handlers", () => {
 
     expect(response.status).toBe(404);
     expect(response.body.error).toEqual("Order not found");
+  });
+
+  it("POST /orders/:id/products returns 404 when product does not exist", async () => {
+    const user = await userStore.create({
+      first_name: "Jane",
+      last_name: "Doe",
+      password: "secret123",
+    });
+    const token = signTestToken(user);
+
+    const order = await orderStore.create(user.id as number);
+
+    const response = await request(app)
+      .post(`/orders/${order.id}/products`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ quantity: 1, productId: 999 });
+
+    expect(response.status).toBe(404);
+    expect(response.body.error).toEqual("Product not found");
   });
 });
